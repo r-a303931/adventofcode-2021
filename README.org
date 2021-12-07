@@ -1,0 +1,9 @@
+#+TITLE: Advent Of Code
+
+Personal attempt to solve these challenges in pure Haskell
+
+* Day 5
+Significant because of the fact that I can't do in place modification of an array, so I have to get clever with infinite data structures
+
+* Day 6
+First use of memoization in Haskell... that was a lot of state to pass around and fold on
