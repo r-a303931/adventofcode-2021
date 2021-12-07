@@ -1,8 +1,8 @@
 module Parser where
 
-import Data.Char
-import Control.Monad
 import Control.Applicative
+import Data.Char
+import Debug.Trace
 
 newtype Parser a = Parser { parse :: String -> Maybe (a,String) }
 
@@ -51,7 +51,10 @@ ws :: Parser String
 ws = spanP isSpace
 
 sepBy             :: Parser a -> Parser b -> Parser [b]
-sepBy sep element = (:) <$> element <*> many (sep *> element) <|> pure []
+sepBy sep element = (:) <$> element <*> many (sep *> element)
 
 intP :: Parser Int
-intP = read <$> spanP isDigit
+intP = read . (\s -> const s . trace . show $ s) <$> spanP isDigit
+
+tokenP :: Parser String
+tokenP = spanP (not . isSpace)

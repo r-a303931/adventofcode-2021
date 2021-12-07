@@ -1,8 +1,10 @@
 module Day4 where
 
+import Control.Applicative
 import Data.List
 import Data.Maybe
 import Lib
+import Parser
 
 data Space = Unmarked Int
            | Marked   Int
@@ -14,22 +16,22 @@ testMoves :: [Int]
 testMoves = [7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1]
 
 testBoards :: [Board]
-testBoards = map parseBoard [ [22,13,17,11,0,8,2,23,4,24,21,9,14,16,7,6,10,3,18,5,1,12,20,15,19]
+testBoards = map shapeBoard [ [22,13,17,11,0,8,2,23,4,24,21,9,14,16,7,6,10,3,18,5,1,12,20,15,19]
                             , [3,15,0,2,22,9,18,13,17,5,19,8,7,25,23,20,11,10,24,4,14,21,16,12,6]
                             , [14,21,17,24,4,10,16,15,9,19,18,8,23,26,20,22,11,13,6,5,2,0,12,3,7]
                             ]
 
-parseBoard :: [Int] -> Board
-parseBoard = map (map Unmarked) . reshape 5
+shapeBoard :: [Int] -> Board
+shapeBoard = map (map Unmarked) . reshape 5
 
-parseCharacter   :: Char -> Int
-parseCharacter c = read [c]
+lineParser :: Parser [Int]
+lineParser = sepBy (charP ',') intP
 
-parseFile      :: String -> ([Int], [Board])
-parseFile text = (moves, boards)
-  where moves  = map read . wordsWhen (==',') . head $ iLines
-        boards = map parseBoard . map (map read) . map (wordsWhen (==',')) . tail $ iLines
-        iLines = lines text
+boardParser :: Parser Board
+boardParser = shapeBoard <$> (sepBy (charP ',') intP <* charP '\n')
+
+fileParser :: Parser ([Int], [Board])
+fileParser = pure (,) <*> (lineParser <* charP '\n') <*> many boardParser
 
 isChecked              :: Space -> Bool
 isChecked (Unmarked _) = False
@@ -76,13 +78,12 @@ solve1 (moves,boards) = head . sortOn (\(_,_,c) -> c) . map (stepCount 0 moves) 
 solve2                :: ([Int], [Board]) -> (Int, Board, Int)
 solve2 (moves,boards) = last . sortOn (\(_,_,c) -> c) . map (stepCount 0 moves) $ boards
 
-input :: IO ([Int], [Board])
-input = parseFile <$> readFile "inputs/day4.txt"
+input = getInput "inputs/day4.txt" fileParser
 
-part1 = Program { filePath="inputs/day4.txt"
-                , parseContents=parseFile
-                , solveProblem=solve1
-                , displaySolution=reduceBoard
-                }
+part1 = Solution { filePathP="inputs/day4.txt"
+                 , contentParser=fileParser
+                 , solveProblemP=solve1
+                 , displaySolutionP=reduceBoard
+                 }
 
-part2 = part1 { solveProblem=solve2 }
+part2 = part1 { solveProblemP=solve2 }

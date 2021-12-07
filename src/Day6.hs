@@ -45,7 +45,7 @@ solve iterationCount seed = foldl f (emptyMap, 0) seed
           where newTotalCount            = currentTotal + fishCount
                 (newMap,fishCount)       = singleLanternFish iterationCount fishTimer fishMap
 
-part1 = ProgramP { filePathP="inputs/day6.txt"
+part1 = Solution { filePathP="inputs/day6.txt"
                  , contentParser=(sepBy (charP ',') intP)
                  , solveProblemP=(snd . solve 80)
                  , displaySolutionP=id

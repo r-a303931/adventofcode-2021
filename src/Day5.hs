@@ -23,7 +23,7 @@ testLines = [ ((0,9), (5,9))
             , ((5,5), (8,2))
             ]
 
-results = makeTestT (solve1 . Just) [ ( testLines, 5 ) ] ++ makeTestT (solve2 . Just) [ ( testLines, 12 ) ]
+results = makeTestT solve1 [ ( testLines, 5 ) ] ++ makeTestT solve2 [ ( testLines, 12 ) ]
 
 horizontalOrVerticalLine                    :: Line -> Bool
 horizontalOrVerticalLine ((x1,y1), (x2,y2)) = (x1 == x2) || (y1 == y2)
@@ -60,20 +60,19 @@ getHotPoints       :: Point -> Map -> Int
 getHotPoints (x,y) = foldl (\s l -> s + (foldl (\c v -> if v >= 2 then c + 1 else c) 0 $ take y l)) 0 . take x
 
 input :: IO [Line]
-input = fromJust . parseFile <$> readFile "inputs/day5.txt"
+input = (fromJust . fmap fst . parse fileParser) <$> readFile "inputs/day5.txt"
 
-parseFile :: String -> Maybe [Line]
-parseFile = fmap fst . parse fileParser
-  where fileParser    = many (lineParser <* ws)
-        lineParser    = (pure l <*> (intP <* charP ',') <*> (intP <* stringP " -> ") <*> (intP <* charP ',') <*> intP)
+fileParser :: Parser [Line]
+fileParser = many (lineParser <* ws)
+  where lineParser    = (pure l <*> (intP <* charP ',') <*> (intP <* stringP " -> ") <*> (intP <* charP ',') <*> intP)
         l x1 y1 x2 y2 = ((x1,y1),(x2,y2))
 
-solve1 (Just cLines) = getHotPoints (maxPoint cLines) . findMap . filter horizontalOrVerticalLine $ cLines
-part1 = Program { filePath="inputs/day5.txt"
-                , parseContents=parseFile
-                , solveProblem=solve1
-                , displaySolution=id
-                }
+solve1 cLines = getHotPoints (maxPoint cLines) . findMap . filter horizontalOrVerticalLine $ cLines
+part1 = Solution { filePathP="inputs/day5.txt"
+                 , contentParser=fileParser
+                 , solveProblemP=solve1
+                 , displaySolutionP=id
+                 }
 
-solve2 (Just cLines) = getHotPoints (maxPoint cLines) . findMap $ cLines
-part2 = part1 { solveProblem=solve2 }
+solve2 cLines = getHotPoints (maxPoint cLines) . findMap $ cLines
+part2 = part1 { solveProblemP=solve2 }

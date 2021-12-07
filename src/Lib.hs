@@ -32,14 +32,17 @@ data Program a b c = Program { filePath :: String
                              , displaySolution :: b -> c
                              }
 
-data ProgramP a b c = ProgramP { filePathP :: String
+data Solution a b c = Solution { filePathP :: String
                                , contentParser :: Parser a
                                , solveProblemP :: a -> b
                                , displaySolutionP :: b -> c
                                }
 
-runProgramP         :: Show c => ProgramP a b c -> IO ()
+runProgramP         :: Show c => Solution a b c -> IO ()
 runProgramP program = interactFile (filePathP program) $ fromJust . (\s -> ((displaySolutionP program) . (solveProblemP program) . fst) <$> (parse (contentParser program) s))
+
+run         :: Show c => Solution a b c -> IO [()]
+run program = sequenceA [runProgramP program, putStrLn ""]
 
 runProgram         :: Show c => Program a b c -> IO ()
 runProgram program = interactFile (filePath program) $ (displaySolution program) . (solveProblem program) . (parseContents program)
@@ -52,3 +55,6 @@ wordsWhen p s =  case dropWhile p s of
                       "" -> []
                       s' -> w : wordsWhen p s''
                             where (w, s'') = break p s'
+
+getInput      :: String -> Parser a -> IO a
+getInput fp p = (fst . fromJust . parse p) <$> readFile fp

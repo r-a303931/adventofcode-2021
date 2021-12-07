@@ -1,8 +1,6 @@
 module Day2 where
 
 import Control.Applicative
-import Data.Char
-import Data.Maybe
 import Lib
 import Parser
 
@@ -20,17 +18,11 @@ data SubmarineCommand = Forward Int
                       | Up Int
                       deriving (Show)
 
-parseForwardCommand :: Parser SubmarineCommand
-parseForwardCommand = Forward . read <$> (stringP "forward " *> spanP isDigit)
-
-parseDownCommand :: Parser SubmarineCommand
-parseDownCommand = Down . read <$> (stringP "down " *> spanP isDigit)
-
-parseUpCommand :: Parser SubmarineCommand
-parseUpCommand = Up . read <$> (stringP "up " *> spanP isDigit)
-
-submarineCommandParser   :: String -> Maybe SubmarineCommand
-submarineCommandParser s = fst <$> parse (parseForwardCommand <|> parseDownCommand <|> parseUpCommand) s
+lineParser :: Parser SubmarineCommand
+lineParser = forward <|> down <|> up
+  where forward = Forward <$> (stringP "forward " *> intP)
+        down    = Down    <$> (stringP "down "    *> intP)
+        up      = Up      <$> (stringP "up "      *> intP)
 
 defaultSubmarineState1 :: SubmarineState1
 defaultSubmarineState1 = SubmarineState1 { ss1Depth = 0, ss1Distance = 0 }
@@ -54,8 +46,10 @@ reduceSubmarine1 state = (ss1Depth state) * (ss1Distance state)
 reduceSubmarine2       :: SubmarineState2 -> Int
 reduceSubmarine2 state = (ss2Depth state) * (ss2Distance state)
 
-part1 :: IO ()
-part1 = ((show . reduceSubmarine1 . foldr updateSubmarineState1 defaultSubmarineState1 . mapMaybe submarineCommandParser . lines) <$> readFile "inputs/day2.txt") >>= putStr
+part1 = Solution { filePathP="inputs/day2.txt"
+                 , contentParser=(sepBy (charP '\n') lineParser)
+                 , solveProblemP=(reduceSubmarine1 . foldr updateSubmarineState1 defaultSubmarineState1)
+                 , displaySolutionP=id
+                 }
 
-part2 :: IO ()
-part2 = ((show . reduceSubmarine2 . foldl updateSubmarineState2 defaultSubmarineState2 . mapMaybe submarineCommandParser . lines) <$> readFile "inputs/day2.txt") >>= putStr
+part2 = part1 { solveProblemP=(reduceSubmarine2 . foldl updateSubmarineState2 defaultSubmarineState2) }
